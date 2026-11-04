@@ -1,0 +1,11 @@
+FROM golang:1.27.3-alpine3.24 AS plugin-builder
+
+RUN apk add --no-cache build-base
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=1 go build -buildmode=plugin -trimpath -o /out/freshguard.so ./cmd/plugin
+
+FROM maximhq/bifrost:v2.3.2
+COPY --from=plugin-builder /out/freshguard.so /plugins/freshguard.so

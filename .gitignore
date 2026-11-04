@@ -1,0 +1,10 @@
+.env
+*.so
+*.dylib
+*.dll
+coverage.out
+dist/
+build/
+recordings/
+*.mp4
+*.mov

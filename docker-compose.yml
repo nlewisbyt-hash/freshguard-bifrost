@@ -1,0 +1,14 @@
+services:
+  bifrost:
+    build:
+      context: .
+      dockerfile: Dockerfile.plugin
+    ports:
+      - "8080:8080"
+    environment:
+      BIFROST_ENCRYPTION_KEY: ${BIFROST_ENCRYPTION_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      EXTRACTOR_API_KEY: ${EXTRACTOR_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+    volumes:
+      - ./config.example.json:/app/data/config.json:ro

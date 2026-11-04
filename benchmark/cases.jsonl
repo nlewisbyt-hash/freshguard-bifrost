@@ -1,0 +1,60 @@
+{"id":"current-01","category":"current","prompt":"The Geek Room Global AI Hackathon is fully virtual.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-02","category":"current","prompt":"The Geek Room Global AI Hackathon is open to participants from any country.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-03","category":"current","prompt":"Teams in the Geek Room Global AI Hackathon may contain one to four members.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-04","category":"current","prompt":"The prototype submission window closes on 15 November 2026 at 11:59 PM in the event schedule.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-05","category":"current","prompt":"The Maxim AI and Bifrost track has a 1,000 US dollar cash prize pool.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-06","category":"current","prompt":"The Tavily track distributes 50,000 API credits among its top three projects.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-07","category":"current","prompt":"Eligible participants can redeem 8,000 Tavily API credits with coupon GEEKROOM2.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-08","category":"current","prompt":"The GEEKROOM2 Tavily coupon is valid through 28 November 2026.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-09","category":"current","prompt":"A public GitHub repository is mandatory for the prototype submission.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-10","category":"current","prompt":"The submission repository must contain a detailed README.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-11","category":"current","prompt":"The hackathon submission requires a pitch deck.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-12","category":"current","prompt":"A deployed application is optional for the Geek Room Global AI Hackathon.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-13","category":"current","prompt":"A demonstration video is optional for the prototype submission.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-14","category":"current","prompt":"The official problem statements opened on 1 November 2026.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-15","category":"current","prompt":"The judging round is scheduled for 29 November 2026.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-16","category":"current","prompt":"Bifrost is the title and track partner for the event.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-17","category":"current","prompt":"A merged Bifrost and Tavily project selects a Bifrost challenge as its primary problem statement.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-18","category":"current","prompt":"An integrated project may compete for both the Bifrost and Tavily prize categories.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-19","category":"current","prompt":"Each team may submit only one final project.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"current-20","category":"current","prompt":"Joining the official Discord is required for participants.","expected_status":"verified","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-01","category":"stale","prompt":"The Bifrost track has a 10,000 US dollar cash prize pool.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-02","category":"stale","prompt":"The Tavily track gives 50,000 API credits to every participant.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-03","category":"stale","prompt":"The prototype submission deadline is 12 November 2026.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-04","category":"stale","prompt":"Teams may contain up to five members.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-05","category":"stale","prompt":"The Geek Room Global AI Hackathon is an in-person event in Delhi.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-06","category":"stale","prompt":"Registration remains open until 30 November 2026.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-07","category":"stale","prompt":"The judging round occurs on 15 November 2026.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-08","category":"stale","prompt":"The prototype submission may use a private GitHub repository.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-09","category":"stale","prompt":"A pitch deck is optional for the prototype submission.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-10","category":"stale","prompt":"A deployed application is mandatory for every entry.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-11","category":"stale","prompt":"A demo video is mandatory for every entry.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-12","category":"stale","prompt":"Only university students can enter the hackathon.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-13","category":"stale","prompt":"Each team may submit two separate final projects.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-14","category":"stale","prompt":"Joining the official Discord is optional.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-15","category":"stale","prompt":"Tavily is the event's title and Bifrost track partner.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-16","category":"stale","prompt":"The participant credit coupon is GEEKROOM1.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-17","category":"stale","prompt":"The participant Tavily coupon grants 500 API credits.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-18","category":"stale","prompt":"The GEEKROOM2 coupon expired on 31 October 2026.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-19","category":"stale","prompt":"The problem statements opened on 15 October 2026.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"stale-20","category":"stale","prompt":"The Bifrost cash pool equals the event's full advertised 11,500 dollar prize value.","expected_status":"stale","reference_url":"https://hackculture.io/hackathons/ai-global-hackathon"}
+{"id":"subjective-01","category":"subjective","prompt":"Bifrost is the most elegant AI gateway ever created.","expected_status":"no_time_sensitive_claims"}
+{"id":"subjective-02","category":"subjective","prompt":"Freshness checks make an application feel more trustworthy.","expected_status":"no_time_sensitive_claims"}
+{"id":"subjective-03","category":"subjective","prompt":"The cyan color in the FreshGuard deck looks better than purple.","expected_status":"no_time_sensitive_claims"}
+{"id":"subjective-04","category":"subjective","prompt":"Hackathons are an exciting way to learn.","expected_status":"no_time_sensitive_claims"}
+{"id":"subjective-05","category":"subjective","prompt":"A concise README is easier to understand than a long one.","expected_status":"no_time_sensitive_claims"}
+{"id":"subjective-06","category":"subjective","prompt":"Native plugins are a satisfying engineering challenge.","expected_status":"no_time_sensitive_claims"}
+{"id":"subjective-07","category":"subjective","prompt":"Evidence-backed answers are more reassuring.","expected_status":"no_time_sensitive_claims"}
+{"id":"subjective-08","category":"subjective","prompt":"The best demo tells one clear story.","expected_status":"no_time_sensitive_claims"}
+{"id":"subjective-09","category":"subjective","prompt":"A solo team can be more focused than a large team.","expected_status":"no_time_sensitive_claims"}
+{"id":"subjective-10","category":"subjective","prompt":"Gateway-level verification is an interesting product direction.","expected_status":"no_time_sensitive_claims"}
+{"id":"unavailable-01","category":"unavailable","prompt":"Verify the current Bifrost track cash pool while Tavily times out.","expected_status":"verification_unavailable","failure_mode":"timeout"}
+{"id":"unavailable-02","category":"unavailable","prompt":"Verify the current submission deadline while the network is unavailable.","expected_status":"verification_unavailable","failure_mode":"network_error"}
+{"id":"unavailable-03","category":"unavailable","prompt":"Verify the current Tavily prize while search returns HTTP 429.","expected_status":"verification_unavailable","failure_mode":"http_429"}
+{"id":"unavailable-04","category":"unavailable","prompt":"Verify the current team-size limit while search returns HTTP 500.","expected_status":"verification_unavailable","failure_mode":"http_500"}
+{"id":"unavailable-05","category":"unavailable","prompt":"Verify the current judging date while search returns HTTP 502.","expected_status":"verification_unavailable","failure_mode":"http_502"}
+{"id":"unavailable-06","category":"unavailable","prompt":"Verify the current coupon value while search returns HTTP 503.","expected_status":"verification_unavailable","failure_mode":"http_503"}
+{"id":"unavailable-07","category":"unavailable","prompt":"Verify the current repository requirement while search returns malformed JSON.","expected_status":"verification_unavailable","failure_mode":"malformed_json"}
+{"id":"unavailable-08","category":"unavailable","prompt":"Verify whether deployment is mandatory while search returns truncated JSON.","expected_status":"verification_unavailable","failure_mode":"truncated_json"}
+{"id":"unavailable-09","category":"unavailable","prompt":"Verify the current problem-statement date while TLS negotiation fails.","expected_status":"verification_unavailable","failure_mode":"tls_error"}
+{"id":"unavailable-10","category":"unavailable","prompt":"Verify whether Discord is required after the request context deadline expires.","expected_status":"verification_unavailable","failure_mode":"context_deadline"}

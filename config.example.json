@@ -1,0 +1,39 @@
+{
+  "$schema": "https://www.getbifrost.ai/schema",
+  "encryption_key": "env.BIFROST_ENCRYPTION_KEY",
+  "config_store": {
+    "enabled": false
+  },
+  "providers": {
+    "openai": {
+      "keys": [
+        {
+          "name": "openai-primary",
+          "value": "env.OPENAI_API_KEY",
+          "models": ["*"],
+          "weight": 1.0
+        }
+      ]
+    }
+  },
+  "plugins": [
+    {
+      "name": "freshguard",
+      "enabled": true,
+      "path": "/plugins/freshguard.so",
+      "version": 1,
+      "placement": "post_builtin",
+      "order": 0,
+      "config": {
+        "enabled": true,
+        "policy": "warn",
+        "threshold": 60,
+        "max_claims": 3,
+        "max_queries": 3,
+        "timeout": "5s",
+        "extractor_endpoint": "https://api.openai.com/v1/chat/completions",
+        "extractor_model": "gpt-4o-mini"
+      }
+    }
+  ]
+}
