@@ -55,11 +55,12 @@ func (v *TavilyVerifier) Verify(ctx context.Context, claims []Claim) ([]ClaimRes
 }
 
 func (v *TavilyVerifier) search(ctx context.Context, query string) ([]Evidence, error) {
+	query = "Is this claim currently true? Answer yes or no first, then explain with current evidence: " + strings.TrimSpace(query)
 	payload, err := json.Marshal(map[string]any{
 		"query":          query,
 		"search_depth":   "advanced",
 		"max_results":    3,
-		"include_answer": false,
+		"include_answer": "advanced",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%w: encode Tavily request", ErrVerificationUnavailable)
@@ -82,6 +83,7 @@ func (v *TavilyVerifier) search(ctx context.Context, query string) ([]Evidence, 
 	}
 
 	var response struct {
+		Answer  string `json:"answer"`
 		Results []struct {
 			URL           string  `json:"url"`
 			Title         string  `json:"title"`
@@ -95,6 +97,7 @@ func (v *TavilyVerifier) search(ctx context.Context, query string) ([]Evidence, 
 	}
 
 	evidence := make([]Evidence, 0, len(response.Results))
+	supports := answerSupportsClaim(response.Answer)
 	for _, result := range response.Results {
 		publishedAt := parsePublishedDate(result.PublishedDate)
 		entailment := result.Score
@@ -109,11 +112,16 @@ func (v *TavilyVerifier) search(ctx context.Context, query string) ([]Evidence, 
 			Title:       result.Title,
 			Snippet:     result.Content,
 			PublishedAt: publishedAt,
-			Supports:    result.Score >= 0.5,
+			Supports:    supports,
 			Entailment:  entailment,
 		})
 	}
 	return evidence, nil
+}
+
+func answerSupportsClaim(answer string) bool {
+	answer = strings.TrimSpace(strings.ToLower(answer))
+	return answer == "yes" || strings.HasPrefix(answer, "yes ") || strings.HasPrefix(answer, "yes;") || strings.HasPrefix(answer, "yes,") || strings.HasPrefix(answer, "yes.")
 }
 
 func parsePublishedDate(value string) time.Time {

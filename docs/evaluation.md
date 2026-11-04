@@ -40,6 +40,21 @@ Label each item independently as `verified`, `stale`, `unverified`, or `verifica
 
 No unmeasured accuracy or latency number should appear in the pitch deck.
 
+### Baseline live run — 4 November 2026
+
+The complete source-unconstrained search-verifier run is committed as [`observations.jsonl`](../benchmark/observations.jsonl) and [`report.json`](../benchmark/report.json). Each objective prompt was supplied as an already-extracted atomic claim, so this run measures Tavily verification rather than LLM extraction.
+
+| Metric | Measured result | Gate | Outcome |
+|---|---:|---:|---|
+| Stale recall | 90.0% | ≥80% | Pass |
+| Current precision | 66.7% | ≥85% | Fail |
+| Subjective bypass | 100.0% | ≥90% | Pass |
+| False block rate | 53.3% | ≤5% | Fail |
+| Added p95 latency | 510.097 ms | Report | Measured |
+| Average Tavily queries | 0.667 per case | ≤3.0 | Pass |
+
+This baseline is intentionally not presented as production-ready accuracy. Sixteen of twenty current claims concerned an event page that unconstrained Tavily search did not reliably retrieve; Tavily sometimes answered `No` because it found similarly named events but no Geek Room source. The result establishes the next technical priority: authoritative-domain/source discovery before scoring. The two failed gates remain visible rather than being removed or relabeled after the run.
+
 The frozen cases now live in [`benchmark/cases.jsonl`](../benchmark/cases.jsonl). The distribution is validated by tests and cannot be evaluated with missing or duplicate observations. See [`benchmark/README.md`](../benchmark/README.md) for the observation schema.
 
 ## Failure-mode expectations
@@ -59,5 +74,6 @@ The frozen cases now live in [`benchmark/cases.jsonl`](../benchmark/cases.jsonl)
 go test -race ./...
 go vet ./...
 go build -buildmode=plugin -trimpath -o freshguard.so ./cmd/plugin
+TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl > benchmark/observations.jsonl
 go run ./cmd/benchmark -cases benchmark/cases.jsonl -observations benchmark/observations.jsonl
 ```

@@ -30,6 +30,18 @@ The evaluator rejects missing, duplicate, unknown, or over-budget observations.
 
 ## Evaluate
 
+Run the search-verifier benchmark with a real Tavily key:
+
+```sh
+TAVILY_API_KEY=... go run ./cmd/live-benchmark \
+  -cases benchmark/cases.jsonl \
+  > benchmark/observations.jsonl
+```
+
+The runner treats each objective prompt as an already-extracted atomic claim. It measures Tavily verification, not LLM claim-extraction accuracy. Subjective cases bypass search, and declared unavailable cases are injected without spending credits. Every current or stale case makes exactly one Tavily request.
+
+Then calculate the frozen metrics:
+
 ```sh
 go run ./cmd/benchmark \
   -cases benchmark/cases.jsonl \

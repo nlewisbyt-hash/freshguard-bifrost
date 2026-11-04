@@ -105,7 +105,7 @@ The 60-case benchmark is frozen in [`benchmark/cases.jsonl`](benchmark/cases.jso
 go run ./cmd/benchmark -observations benchmark/observations.jsonl
 ```
 
-The command refuses incomplete or duplicate runs and prints the confusion matrix plus the required submission metrics. No benchmark result is bundled until the live run has actually been measured.
+The command refuses incomplete or duplicate runs and prints the confusion matrix plus the required submission metrics. The first complete live baseline and its limitations are documented in [`docs/evaluation.md`](docs/evaluation.md); failed gates are retained rather than hidden.
 
 ## Security and privacy
 

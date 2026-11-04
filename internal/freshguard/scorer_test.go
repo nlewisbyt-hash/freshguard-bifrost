@@ -47,6 +47,26 @@ func TestScoreNoEvidenceIsUnverified(t *testing.T) {
 	}
 }
 
+func TestScoreDoesNotTreatMissingPublicationDateAsStale(t *testing.T) {
+	now := time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)
+	result := Score(
+		Claim{Text: "The current documentation confirms this claim", Domain: "other"},
+		[]Evidence{
+			{URL: "https://docs.example/current", Supports: true, Entailment: 0.8},
+			{URL: "https://vendor.example/current", Supports: true, Entailment: 0.7},
+			{URL: "https://news.example/current", Supports: true, Entailment: 0.6},
+		},
+		now,
+	)
+
+	if result.Status != "verified" {
+		t.Fatalf("Status = %q, want verified (score=%d, components=%#v)", result.Status, result.Score, result.Components)
+	}
+	if result.Components.Recency != 0 {
+		t.Fatalf("Recency = %d, want 0 to expose unavailable metadata", result.Components.Recency)
+	}
+}
+
 func TestScoreExposesComponentScores(t *testing.T) {
 	now := time.Date(2026, 11, 3, 0, 0, 0, 0, time.UTC)
 	result := Score(

@@ -12,10 +12,14 @@ func Score(claim Claim, evidence []Evidence, now time.Time) ClaimResult {
 	}
 
 	var recencyTotal float64
+	var recencyCount int
 	var entailmentTotal float64
 	var supports int
 	for _, item := range evidence {
-		recencyTotal += recencyScore(item.PublishedAt, now)
+		if !item.PublishedAt.IsZero() {
+			recencyTotal += recencyScore(item.PublishedAt, now)
+			recencyCount++
+		}
 		entailmentTotal += clampFloat(item.Entailment, 0, 1) * 100
 		if item.Supports {
 			supports++
@@ -24,16 +28,23 @@ func Score(claim Claim, evidence []Evidence, now time.Time) ClaimResult {
 
 	count := float64(len(evidence))
 	result.Components = ScoreComponents{
-		Recency:         clampInt(int(math.Round(recencyTotal/count)), 0, 100),
 		SourceAgreement: clampInt(int(math.Round(float64(supports)/count*100)), 0, 100),
 		Entailment:      clampInt(int(math.Round(entailmentTotal/count)), 0, 100),
 		Coverage:        clampInt(int(math.Round(math.Min(count, 3)/3*100)), 0, 100),
 	}
+	if recencyCount > 0 {
+		result.Components.Recency = clampInt(int(math.Round(recencyTotal/float64(recencyCount))), 0, 100)
+	}
 
-	weighted := float64(result.Components.Recency)*0.35 +
-		float64(result.Components.SourceAgreement)*0.30 +
+	weighted := float64(result.Components.SourceAgreement)*0.30 +
 		float64(result.Components.Entailment)*0.25 +
 		float64(result.Components.Coverage)*0.10
+	weight := 0.65
+	if recencyCount > 0 {
+		weighted += float64(result.Components.Recency) * 0.35
+		weight += 0.35
+	}
+	weighted /= weight
 	result.Score = clampInt(int(math.Round(weighted)), 0, 100)
 	if result.Score >= 60 && result.Components.SourceAgreement >= 50 {
 		result.Status = "verified"

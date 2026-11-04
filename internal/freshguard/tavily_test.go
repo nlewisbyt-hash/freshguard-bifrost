@@ -14,18 +14,21 @@ import (
 
 func TestTavilyMapsEvidenceAndFormsQuery(t *testing.T) {
 	var query string
+	var includeAnswer string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if got := r.Header.Get("Authorization"); got != "Bearer tavily-key" {
 			t.Fatalf("Authorization = %q", got)
 		}
 		var request struct {
-			Query string `json:"query"`
+			Query         string `json:"query"`
+			IncludeAnswer string `json:"include_answer"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 			t.Fatal(err)
 		}
 		query = request.Query
-		_, _ = w.Write([]byte(`{"results":[{"url":"https://example.com/current","title":"Current API","content":"The API is v3","published_date":"2026-11-01T00:00:00Z","score":0.9}]}`))
+		includeAnswer = request.IncludeAnswer
+		_, _ = w.Write([]byte(`{"answer":"Yes. The current documentation confirms it.","results":[{"url":"https://example.com/current","title":"Current API","content":"The API is v3","published_date":"2026-11-01T00:00:00Z","score":0.9}]}`))
 	}))
 	defer server.Close()
 
@@ -35,8 +38,11 @@ func TestTavilyMapsEvidenceAndFormsQuery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if query != "The API is v3" {
+	if query != "Is this claim currently true? Answer yes or no first, then explain with current evidence: The API is v3" {
 		t.Fatalf("query = %q", query)
+	}
+	if includeAnswer != "advanced" {
+		t.Fatalf("include_answer = %q", includeAnswer)
 	}
 	if len(results) != 1 || len(results[0].Evidence) != 1 {
 		t.Fatalf("results = %#v", results)
@@ -47,6 +53,41 @@ func TestTavilyMapsEvidenceAndFormsQuery(t *testing.T) {
 	}
 	if evidence.PublishedAt.IsZero() || !evidence.Supports || evidence.Entailment != 0.9 {
 		t.Fatalf("mapped scores = %#v", evidence)
+	}
+}
+
+func TestTavilyUsesAnswerStanceInsteadOfRelevanceAsTruth(t *testing.T) {
+	tests := []struct {
+		name         string
+		answerField  string
+		wantSupports bool
+	}{
+		{name: "yes supports even at low relevance", answerField: `"answer":"Yes; the source confirms the claim.",`, wantSupports: true},
+		{name: "no contradicts even at high relevance", answerField: `"answer":"No. The current source contradicts the claim.",`, wantSupports: false},
+		{name: "ambiguous answer stays conservative", answerField: `"answer":"The available sources discuss the topic without resolving it.",`, wantSupports: false},
+		{name: "missing answer stays conservative", answerField: "", wantSupports: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = w.Write([]byte(`{` + tt.answerField + `"results":[{"url":"https://example.com","title":"Source","content":"Evidence","score":0.99}]}`))
+			}))
+			defer server.Close()
+
+			verifier := NewTavilyVerifier(server.Client(), "key", Score)
+			verifier.endpoint = server.URL
+			results, err := verifier.Verify(context.Background(), []Claim{{Text: "claim"}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(results) != 1 || len(results[0].Evidence) != 1 {
+				t.Fatalf("results = %#v", results)
+			}
+			if got := results[0].Evidence[0].Supports; got != tt.wantSupports {
+				t.Fatalf("Supports = %v, want %v", got, tt.wantSupports)
+			}
+		})
 	}
 }
 
