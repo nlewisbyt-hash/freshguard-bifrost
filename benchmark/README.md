@@ -48,6 +48,14 @@ TAVILY_API_KEY=... go run ./cmd/live-benchmark \
   > benchmark/observations-sourced.jsonl
 ```
 
+For conservative direct-page verification, use `-direct-source` and a third output file. A claim is supported only when its normalized text explicitly appears in the extracted authoritative page content:
+
+```sh
+TAVILY_API_KEY=... go run ./cmd/live-benchmark \
+  -cases benchmark/cases.jsonl -direct-source \
+  > benchmark/observations-direct.jsonl
+```
+
 Then calculate the frozen metrics:
 
 ```sh

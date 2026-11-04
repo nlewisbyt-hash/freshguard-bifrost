@@ -89,6 +89,7 @@ The integration test builds the native `.so` and loads it in an isolated process
 | `max_queries` | `3` | Declared Tavily query budget. The verifier hard-caps at three. |
 | `timeout` | `5s` | HTTP timeout for extraction and search. |
 | `trusted_domains` | `[]` | Optional authoritative domains passed to Tavily `include_domains`. |
+| `trusted_urls` | `[]` | Optional authoritative HTTPS pages verified directly with Tavily Extract; takes precedence over domains. |
 | `extractor_endpoint` | OpenAI chat completions | JSON-capable extraction endpoint. |
 | `extractor_model` | `gpt-4o-mini` | Extraction model. |
 

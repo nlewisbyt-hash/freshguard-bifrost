@@ -69,6 +69,20 @@ The separate [`observations-sourced.jsonl`](../benchmark/observations-sourced.js
 
 Domain restriction eliminated false verification among the stale cases but did not recover sixteen current claims whose detailed FAQ facts were absent from Tavily's retrievable page content. This proves domain selection alone is insufficient: the next iteration needs direct page extraction or pre-indexed authoritative documents, plus a latency budget. The source-grounded results are a controlled mode, not an open-web accuracy claim.
 
+### Direct authoritative-page comparison — 4 November 2026
+
+The experimental [`observations-direct.jsonl`](../benchmark/observations-direct.jsonl) and [`report-direct.json`](../benchmark/report-direct.json) run used Tavily Extract against each frozen `reference_url`. To avoid inventing semantic agreement without an entailment model, it marked support only when the normalized claim explicitly appeared in extracted content.
+
+| Metric | Direct-page result |
+|---|---:|
+| Stale recall | 100.0% |
+| Current precision | 100.0% |
+| Subjective bypass | 100.0% |
+| False block rate | 63.3% |
+| p95 added latency | 3,992.483 ms |
+
+The page extraction itself succeeded and exposed FAQ content that search missed, but exact containment was too conservative for paraphrased true claims: only one of twenty current claims was verified. This mode is therefore committed as experimental evidence plumbing, not enabled by default. A dedicated entailment stage is required before direct extraction can reduce false blocks safely.
+
 The frozen cases now live in [`benchmark/cases.jsonl`](../benchmark/cases.jsonl). The distribution is validated by tests and cannot be evaluated with missing or duplicate observations. See [`benchmark/README.md`](../benchmark/README.md) for the observation schema.
 
 ## Failure-mode expectations
@@ -90,5 +104,6 @@ go vet ./...
 go build -buildmode=plugin -trimpath -o freshguard.so ./cmd/plugin
 TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl > benchmark/observations.jsonl
 TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl -source-grounded > benchmark/observations-sourced.jsonl
+TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl -direct-source > benchmark/observations-direct.jsonl
 go run ./cmd/benchmark -cases benchmark/cases.jsonl -observations benchmark/observations.jsonl
 ```

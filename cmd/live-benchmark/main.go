@@ -25,7 +25,12 @@ func run(args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	casesPath := flags.String("cases", "benchmark/cases.jsonl", "path to the frozen benchmark cases")
 	sourceGrounded := flags.Bool("source-grounded", false, "restrict each objective case to its reference URL domain")
+	directSource := flags.Bool("direct-source", false, "verify each objective case directly against its reference URL")
 	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if *sourceGrounded && *directSource {
+		fmt.Fprintln(stderr, "-source-grounded and -direct-source are mutually exclusive")
 		return 2
 	}
 	apiKey := strings.TrimSpace(os.Getenv("TAVILY_API_KEY"))
@@ -40,6 +45,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 	}
 	client := &http.Client{Timeout: 30 * time.Second}
 	verifierFor := func(item benchmarkpkg.Case) freshguard.Verifier {
+		if *directSource {
+			return freshguard.NewDirectURLVerifier(client, apiKey, urlsForCase(item), nil)
+		}
 		if *sourceGrounded {
 			return freshguard.NewTavilyVerifierWithDomains(client, apiKey, domainsForCase(item), nil)
 		}
@@ -50,6 +58,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+func urlsForCase(item benchmarkpkg.Case) []string {
+	parsed, err := url.Parse(strings.TrimSpace(item.ReferenceURL))
+	if err != nil || parsed.Scheme != "https" || parsed.Hostname() == "" || parsed.User != nil {
+		return nil
+	}
+	parsed.Fragment = ""
+	return []string{parsed.String()}
 }
 
 func runCases(ctx context.Context, cases []benchmarkpkg.Case, verifierFor func(benchmarkpkg.Case) freshguard.Verifier, output io.Writer) error {

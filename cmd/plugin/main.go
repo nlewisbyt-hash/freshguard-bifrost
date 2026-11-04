@@ -35,10 +35,17 @@ func Init(config any) error {
 		return fmt.Errorf("freshguard config: EXTRACTOR_API_KEY is required when enabled")
 	}
 	client := &http.Client{Timeout: cfg.Timeout}
+	trustedURLs := stringSliceValue(raw, "trusted_urls")
+	var verifier freshguard.Verifier
+	if len(trustedURLs) > 0 {
+		verifier = freshguard.NewDirectURLVerifier(client, cfg.APIKey, trustedURLs, freshguard.Score)
+	} else {
+		verifier = freshguard.NewTavilyVerifierWithDomains(client, cfg.APIKey, stringSliceValue(raw, "trusted_domains"), freshguard.Score)
+	}
 	created := freshguardbifrost.New(
 		cfg,
 		freshguard.NewJSONExtractor(client, extractorEndpoint, extractorModel, extractorKey),
-		freshguard.NewTavilyVerifierWithDomains(client, cfg.APIKey, stringSliceValue(raw, "trusted_domains"), freshguard.Score),
+		verifier,
 	)
 	pluginMu.Lock()
 	instance = created

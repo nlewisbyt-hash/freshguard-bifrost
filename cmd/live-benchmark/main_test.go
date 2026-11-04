@@ -99,3 +99,20 @@ func TestDomainsForCaseExtractsOnlyReferenceHostname(t *testing.T) {
 		})
 	}
 }
+
+func TestURLsForCaseUsesOnlyValidHTTPSReference(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{input: "https://hackculture.io/hackathons/event", want: "https://hackculture.io/hackathons/event"},
+		{input: "http://hackculture.io/event", want: ""},
+		{input: "://bad", want: ""},
+	}
+	for _, tt := range tests {
+		got := urlsForCase(benchmarkpkg.Case{ReferenceURL: tt.input})
+		if strings.Join(got, ",") != tt.want {
+			t.Fatalf("urlsForCase(%q) = %v, want %q", tt.input, got, tt.want)
+		}
+	}
+}
