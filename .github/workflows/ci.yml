@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.27.3
+          cache: true
+
+      - name: Verify formatting
+        run: test -z "$(gofmt -l .)"
+
+      - name: Run race-enabled tests
+        run: go test -race -count=1 ./...
+
+      - name: Run static analysis
+        run: go vet ./...
+
+      - name: Build native plugin
+        run: go build -buildmode=plugin -trimpath -o freshguard.so ./cmd/plugin
+
+      - name: Verify required plugin exports
+        run: |
+          go tool nm freshguard.so > freshguard.symbols
+          for symbol in Init GetName PreRequestHook PreLLMHook PostLLMHook Cleanup; do
+            grep -q " github.com/phishguard/freshguard-bifrost/cmd/plugin.${symbol}$" freshguard.symbols
+          done
