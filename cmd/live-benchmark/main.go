@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -23,6 +24,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 	flags := flag.NewFlagSet("freshguard-live-benchmark", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	casesPath := flags.String("cases", "benchmark/cases.jsonl", "path to the frozen benchmark cases")
+	sourceGrounded := flags.Bool("source-grounded", false, "restrict each objective case to its reference URL domain")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -36,15 +38,21 @@ func run(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
-	verifier := freshguard.NewTavilyVerifier(&http.Client{Timeout: 30 * time.Second}, apiKey, nil)
-	if err := runCases(context.Background(), cases, verifier, stdout); err != nil {
+	client := &http.Client{Timeout: 30 * time.Second}
+	verifierFor := func(item benchmarkpkg.Case) freshguard.Verifier {
+		if *sourceGrounded {
+			return freshguard.NewTavilyVerifierWithDomains(client, apiKey, domainsForCase(item), nil)
+		}
+		return freshguard.NewTavilyVerifier(client, apiKey, nil)
+	}
+	if err := runCases(context.Background(), cases, verifierFor, stdout); err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
 	return 0
 }
 
-func runCases(ctx context.Context, cases []benchmarkpkg.Case, verifier freshguard.Verifier, output io.Writer) error {
+func runCases(ctx context.Context, cases []benchmarkpkg.Case, verifierFor func(benchmarkpkg.Case) freshguard.Verifier, output io.Writer) error {
 	encoder := json.NewEncoder(output)
 	for _, item := range cases {
 		started := time.Now()
@@ -58,6 +66,7 @@ func runCases(ctx context.Context, cases []benchmarkpkg.Case, verifier freshguar
 		default:
 			observation.Searched = true
 			observation.TavilyQueries = 1
+			verifier := verifierFor(item)
 			results, err := verifier.Verify(ctx, []freshguard.Claim{{Text: item.Prompt, Domain: "other"}})
 			if err != nil {
 				observation.ActualStatus = benchmarkpkg.StatusUnavailable
@@ -75,6 +84,18 @@ func runCases(ctx context.Context, cases []benchmarkpkg.Case, verifier freshguar
 		}
 	}
 	return nil
+}
+
+func domainsForCase(item benchmarkpkg.Case) []string {
+	parsed, err := url.Parse(strings.TrimSpace(item.ReferenceURL))
+	if err != nil || parsed.Hostname() == "" {
+		return nil
+	}
+	host := strings.ToLower(strings.TrimPrefix(parsed.Hostname(), "www."))
+	if host == "" {
+		return nil
+	}
+	return []string{host}
 }
 
 func normalizeStatus(status string) benchmarkpkg.Status {

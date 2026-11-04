@@ -38,7 +38,7 @@ func TestTavilyMapsEvidenceAndFormsQuery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if query != "Is this claim currently true? Answer yes or no first, then explain with current evidence: The API is v3" {
+	if query != "Determine whether the claim is true according to current sources. Your answer MUST begin with exactly YES: or NO:. Claim: The API is v3" {
 		t.Fatalf("query = %q", query)
 	}
 	if includeAnswer != "advanced" {
@@ -56,6 +56,57 @@ func TestTavilyMapsEvidenceAndFormsQuery(t *testing.T) {
 	}
 }
 
+func TestTavilyNormalizesAndSendsTrustedDomains(t *testing.T) {
+	var includeDomains []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request struct {
+			IncludeDomains []string `json:"include_domains"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatal(err)
+		}
+		includeDomains = request.IncludeDomains
+		_, _ = w.Write([]byte(`{"answer":"Yes.","results":[]}`))
+	}))
+	defer server.Close()
+
+	verifier := NewTavilyVerifierWithDomains(server.Client(), "key", []string{
+		" HTTPS://WWW.HackCulture.io/path ",
+		"hackculture.io",
+		"not a domain",
+		"127.0.0.1",
+	}, Score)
+	verifier.endpoint = server.URL
+	if _, err := verifier.Verify(context.Background(), []Claim{{Text: "claim"}}); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := strings.Join(includeDomains, ","), "hackculture.io"; got != want {
+		t.Fatalf("include_domains = %q, want %q", got, want)
+	}
+}
+
+func TestTavilyOmitsTrustedDomainsWhenUnconfigured(t *testing.T) {
+	var hasDomains bool
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatal(err)
+		}
+		_, hasDomains = request["include_domains"]
+		_, _ = w.Write([]byte(`{"answer":"Yes.","results":[]}`))
+	}))
+	defer server.Close()
+
+	verifier := NewTavilyVerifier(server.Client(), "key", Score)
+	verifier.endpoint = server.URL
+	if _, err := verifier.Verify(context.Background(), []Claim{{Text: "claim"}}); err != nil {
+		t.Fatal(err)
+	}
+	if hasDomains {
+		t.Fatal("include_domains must be omitted when unconfigured")
+	}
+}
+
 func TestTavilyUsesAnswerStanceInsteadOfRelevanceAsTruth(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -63,6 +114,7 @@ func TestTavilyUsesAnswerStanceInsteadOfRelevanceAsTruth(t *testing.T) {
 		wantSupports bool
 	}{
 		{name: "yes supports even at low relevance", answerField: `"answer":"Yes; the source confirms the claim.",`, wantSupports: true},
+		{name: "yes colon protocol supports", answerField: `"answer":"YES: the official source confirms the claim.",`, wantSupports: true},
 		{name: "no contradicts even at high relevance", answerField: `"answer":"No. The current source contradicts the claim.",`, wantSupports: false},
 		{name: "ambiguous answer stays conservative", answerField: `"answer":"The available sources discuss the topic without resolving it.",`, wantSupports: false},
 		{name: "missing answer stays conservative", answerField: "", wantSupports: false},

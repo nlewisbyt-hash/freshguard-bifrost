@@ -40,6 +40,14 @@ TAVILY_API_KEY=... go run ./cmd/live-benchmark \
 
 The runner treats each objective prompt as an already-extracted atomic claim. It measures Tavily verification, not LLM claim-extraction accuracy. Subjective cases bypass search, and declared unavailable cases are injected without spending credits. Every current or stale case makes exactly one Tavily request.
 
+To measure controlled authoritative-source mode separately, add `-source-grounded`. The runner derives one hostname from each frozen `reference_url` and sends it through Tavily `include_domains`. Write this to separate files; never overwrite the unconstrained baseline:
+
+```sh
+TAVILY_API_KEY=... go run ./cmd/live-benchmark \
+  -cases benchmark/cases.jsonl -source-grounded \
+  > benchmark/observations-sourced.jsonl
+```
+
 Then calculate the frozen metrics:
 
 ```sh

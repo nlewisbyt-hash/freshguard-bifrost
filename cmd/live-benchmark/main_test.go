@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	benchmarkpkg "github.com/phishguard/freshguard-bifrost/internal/benchmark"
@@ -33,10 +34,17 @@ func TestRunCasesRoutesCategoriesAndWritesCompleteObservations(t *testing.T) {
 		{ID: "unavailable-01", Category: benchmarkpkg.CategoryUnavailable, Prompt: "network case", FailureMode: "timeout"},
 	}
 	verifier := &recordingVerifier{}
+	var factoryCases []benchmarkpkg.Case
 	var output bytes.Buffer
 
-	if err := runCases(context.Background(), cases, verifier, &output); err != nil {
+	if err := runCases(context.Background(), cases, func(item benchmarkpkg.Case) freshguard.Verifier {
+		factoryCases = append(factoryCases, item)
+		return verifier
+	}, &output); err != nil {
 		t.Fatal(err)
+	}
+	if got, want := len(factoryCases), 2; got != want {
+		t.Fatalf("factory cases = %d, want %d", got, want)
 	}
 	if got, want := len(verifier.claims), 2; got != want {
 		t.Fatalf("verifier claims = %d, want %d", got, want)
@@ -69,5 +77,25 @@ func TestRunCasesRoutesCategoriesAndWritesCompleteObservations(t *testing.T) {
 		if got.LatencyMS < 0 {
 			t.Fatalf("latency = %f", got.LatencyMS)
 		}
+	}
+}
+
+func TestDomainsForCaseExtractsOnlyReferenceHostname(t *testing.T) {
+	tests := []struct {
+		name string
+		item benchmarkpkg.Case
+		want string
+	}{
+		{name: "reference", item: benchmarkpkg.Case{ReferenceURL: "https://www.HackCulture.io/hackathons/event"}, want: "hackculture.io"},
+		{name: "missing", item: benchmarkpkg.Case{}, want: ""},
+		{name: "invalid", item: benchmarkpkg.Case{ReferenceURL: "://bad"}, want: ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := domainsForCase(tt.item)
+			if strings.Join(got, ",") != tt.want {
+				t.Fatalf("domainsForCase() = %v, want %q", got, tt.want)
+			}
+		})
 	}
 }

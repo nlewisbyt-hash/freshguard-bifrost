@@ -38,7 +38,7 @@ func Init(config any) error {
 	created := freshguardbifrost.New(
 		cfg,
 		freshguard.NewJSONExtractor(client, extractorEndpoint, extractorModel, extractorKey),
-		freshguard.NewTavilyVerifier(client, cfg.APIKey, freshguard.Score),
+		freshguard.NewTavilyVerifierWithDomains(client, cfg.APIKey, stringSliceValue(raw, "trusted_domains"), freshguard.Score),
 	)
 	pluginMu.Lock()
 	instance = created
@@ -106,4 +106,26 @@ func stringValue(raw map[string]any, key, fallback string) string {
 		return strings.TrimSpace(value)
 	}
 	return fallback
+}
+
+func stringSliceValue(raw map[string]any, key string) []string {
+	appendValue := func(values []string, value any) []string {
+		text, ok := value.(string)
+		if !ok || strings.TrimSpace(text) == "" {
+			return values
+		}
+		return append(values, strings.TrimSpace(text))
+	}
+	values := []string{}
+	switch rawValues := raw[key].(type) {
+	case []string:
+		for _, value := range rawValues {
+			values = appendValue(values, value)
+		}
+	case []any:
+		for _, value := range rawValues {
+			values = appendValue(values, value)
+		}
+	}
+	return values
 }

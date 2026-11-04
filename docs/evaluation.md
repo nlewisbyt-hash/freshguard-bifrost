@@ -55,6 +55,20 @@ The complete source-unconstrained search-verifier run is committed as [`observat
 
 This baseline is intentionally not presented as production-ready accuracy. Sixteen of twenty current claims concerned an event page that unconstrained Tavily search did not reliably retrieve; Tavily sometimes answered `No` because it found similarly named events but no Geek Room source. The result establishes the next technical priority: authoritative-domain/source discovery before scoring. The two failed gates remain visible rather than being removed or relabeled after the run.
 
+### Authoritative-domain comparison — 4 November 2026
+
+The separate [`observations-sourced.jsonl`](../benchmark/observations-sourced.jsonl) and [`report-sourced.json`](../benchmark/report-sourced.json) run constrained each objective case to the hostname in its frozen `reference_url`. It did not overwrite the open-web baseline.
+
+| Metric | Open web | Source-grounded | Change |
+|---|---:|---:|---:|
+| Stale recall | 90.0% | 100.0% | +10.0 pp |
+| Current precision | 66.7% | 100.0% | +33.3 pp |
+| Subjective bypass | 100.0% | 100.0% | 0 pp |
+| False block rate | 53.3% | 53.3% | 0 pp |
+| p95 added latency | 510.097 ms | 5,322.031 ms | +4,811.934 ms |
+
+Domain restriction eliminated false verification among the stale cases but did not recover sixteen current claims whose detailed FAQ facts were absent from Tavily's retrievable page content. This proves domain selection alone is insufficient: the next iteration needs direct page extraction or pre-indexed authoritative documents, plus a latency budget. The source-grounded results are a controlled mode, not an open-web accuracy claim.
+
 The frozen cases now live in [`benchmark/cases.jsonl`](../benchmark/cases.jsonl). The distribution is validated by tests and cannot be evaluated with missing or duplicate observations. See [`benchmark/README.md`](../benchmark/README.md) for the observation schema.
 
 ## Failure-mode expectations
@@ -75,5 +89,6 @@ go test -race ./...
 go vet ./...
 go build -buildmode=plugin -trimpath -o freshguard.so ./cmd/plugin
 TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl > benchmark/observations.jsonl
+TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl -source-grounded > benchmark/observations-sourced.jsonl
 go run ./cmd/benchmark -cases benchmark/cases.jsonl -observations benchmark/observations.jsonl
 ```

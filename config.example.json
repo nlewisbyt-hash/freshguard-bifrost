@@ -31,6 +31,7 @@
         "max_claims": 3,
         "max_queries": 3,
         "timeout": "5s",
+		"trusted_domains": [],
         "extractor_endpoint": "https://api.openai.com/v1/chat/completions",
         "extractor_model": "gpt-4o-mini"
       }
