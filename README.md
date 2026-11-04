@@ -89,7 +89,7 @@ The integration test builds the native `.so` and loads it in an isolated process
 | `max_queries` | `3` | Declared Tavily query budget. The verifier hard-caps at three. |
 | `timeout` | `5s` | HTTP timeout for extraction and search. |
 | `trusted_domains` | `[]` | Optional authoritative domains passed to Tavily `include_domains`. |
-| `trusted_urls` | `[]` | Optional authoritative HTTPS pages verified directly with Tavily Extract; takes precedence over domains. |
+| `trusted_urls` | `[]` | Optional authoritative HTTPS pages verified with Tavily Extract plus the configured entailment model; takes precedence over domains. |
 | `extractor_endpoint` | OpenAI chat completions | JSON-capable extraction endpoint. |
 | `extractor_model` | `gpt-4o-mini` | Extraction model. |
 
@@ -112,6 +112,7 @@ The command refuses incomplete or duplicate runs and prints the confusion matrix
 ## Security and privacy
 
 - The plugin sends only extracted claims—not the full conversation—to Tavily.
+- Direct URL mode sends at most 6,000 characters of extracted authoritative evidence to the configured entailment model; page instructions are explicitly treated as untrusted data.
 - API keys stay in environment variables.
 - Provider errors are passed through unchanged; FreshGuard never masks them.
 - Verification is bounded to three claims and three searches.

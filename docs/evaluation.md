@@ -83,6 +83,8 @@ The experimental [`observations-direct.jsonl`](../benchmark/observations-direct.
 
 The page extraction itself succeeded and exposed FAQ content that search missed, but exact containment was too conservative for paraphrased true claims: only one of twenty current claims was verified. This mode is therefore committed as experimental evidence plumbing, not enabled by default. A dedicated entailment stage is required before direct extraction can reduce false blocks safely.
 
+The direct mode now includes that entailment stage in code: when `EXTRACTOR_API_KEY` is available, a strict JSON judge classifies bounded extracted evidence as `supports`, `contradicts`, or `insufficient`. Injection text remains untrusted data and only `supports` can raise evidence support. This path is covered by local HTTP tests but has no published live accuracy number yet because no compatible model credential was available for this run; the deterministic direct report above remains unchanged.
+
 The frozen cases now live in [`benchmark/cases.jsonl`](../benchmark/cases.jsonl). The distribution is validated by tests and cannot be evaluated with missing or duplicate observations. See [`benchmark/README.md`](../benchmark/README.md) for the observation schema.
 
 ## Failure-mode expectations

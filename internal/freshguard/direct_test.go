@@ -10,6 +10,18 @@ import (
 	"testing"
 )
 
+type fakeEntailmentJudge struct {
+	decision EntailmentDecision
+	err      error
+	claim    string
+	evidence string
+}
+
+func (j *fakeEntailmentJudge) Judge(_ context.Context, claim, evidence string) (EntailmentDecision, error) {
+	j.claim, j.evidence = claim, evidence
+	return j.decision, j.err
+}
+
 func TestDirectURLVerifierExtractsAndMatchesNormalizedClaim(t *testing.T) {
 	var request struct {
 		URLs            []string `json:"urls"`
@@ -91,6 +103,54 @@ func TestDirectURLVerifierRejectsInvalidOrFailedExtraction(t *testing.T) {
 		verifier.endpoint = server.URL
 		_, err := verifier.Verify(context.Background(), []Claim{{Text: "claim"}})
 		if !errors.Is(err, ErrVerificationUnavailable) || strings.Contains(err.Error(), "super-secret") {
+			t.Fatalf("error = %v", err)
+		}
+	})
+}
+
+func TestDirectURLVerifierUsesEntailmentJudgeForParaphrases(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"results":[{"url":"https://docs.example/page","raw_content":"The official schedule lists the deadline as November 15, 2026."}]}`))
+	}))
+	defer server.Close()
+	judge := &fakeEntailmentJudge{decision: EntailmentSupports}
+	verifier := NewDirectURLVerifierWithJudge(server.Client(), "key", []string{"https://docs.example/page"}, Score, judge)
+	verifier.endpoint = server.URL
+	claim := Claim{Text: "The submission closes on 15 November 2026."}
+	results, err := verifier.Verify(context.Background(), []Claim{claim})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 1 || results[0].Status != "verified" || !results[0].Evidence[0].Supports {
+		t.Fatalf("results = %#v", results)
+	}
+	if judge.claim != claim.Text || !strings.Contains(judge.evidence, "November 15") {
+		t.Fatalf("judge inputs = %q / %q", judge.claim, judge.evidence)
+	}
+}
+
+func TestDirectURLVerifierJudgeContradictionAndFailureFailClosed(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"results":[{"url":"https://docs.example/page","raw_content":"authoritative content"}]}`))
+	}))
+	defer server.Close()
+
+	t.Run("contradiction is stale", func(t *testing.T) {
+		judge := &fakeEntailmentJudge{decision: EntailmentContradicts}
+		verifier := NewDirectURLVerifierWithJudge(server.Client(), "key", []string{"https://docs.example/page"}, Score, judge)
+		verifier.endpoint = server.URL
+		results, err := verifier.Verify(context.Background(), []Claim{{Text: "false claim"}})
+		if err != nil || len(results) != 1 || results[0].Status != "stale" || results[0].Evidence[0].Supports {
+			t.Fatalf("results = %#v, err = %v", results, err)
+		}
+	})
+
+	t.Run("judge error is unavailable", func(t *testing.T) {
+		judge := &fakeEntailmentJudge{err: errors.New("model down")}
+		verifier := NewDirectURLVerifierWithJudge(server.Client(), "key", []string{"https://docs.example/page"}, Score, judge)
+		verifier.endpoint = server.URL
+		_, err := verifier.Verify(context.Background(), []Claim{{Text: "claim"}})
+		if !errors.Is(err, ErrVerificationUnavailable) {
 			t.Fatalf("error = %v", err)
 		}
 	})

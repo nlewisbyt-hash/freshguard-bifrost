@@ -26,6 +26,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 	casesPath := flags.String("cases", "benchmark/cases.jsonl", "path to the frozen benchmark cases")
 	sourceGrounded := flags.Bool("source-grounded", false, "restrict each objective case to its reference URL domain")
 	directSource := flags.Bool("direct-source", false, "verify each objective case directly against its reference URL")
+	entailmentEndpoint := flags.String("entailment-endpoint", "https://api.openai.com/v1/chat/completions", "OpenAI-compatible entailment endpoint")
+	entailmentModel := flags.String("entailment-model", "gpt-4o-mini", "entailment model used with EXTRACTOR_API_KEY")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -44,9 +46,13 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	client := &http.Client{Timeout: 30 * time.Second}
+	var judge freshguard.EntailmentJudge
+	if key := strings.TrimSpace(os.Getenv("EXTRACTOR_API_KEY")); *directSource && key != "" {
+		judge = freshguard.NewJSONEntailmentJudge(client, *entailmentEndpoint, *entailmentModel, key)
+	}
 	verifierFor := func(item benchmarkpkg.Case) freshguard.Verifier {
 		if *directSource {
-			return freshguard.NewDirectURLVerifier(client, apiKey, urlsForCase(item), nil)
+			return freshguard.NewDirectURLVerifierWithJudge(client, apiKey, urlsForCase(item), nil, judge)
 		}
 		if *sourceGrounded {
 			return freshguard.NewTavilyVerifierWithDomains(client, apiKey, domainsForCase(item), nil)

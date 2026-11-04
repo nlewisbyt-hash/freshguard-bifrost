@@ -38,7 +38,8 @@ func Init(config any) error {
 	trustedURLs := stringSliceValue(raw, "trusted_urls")
 	var verifier freshguard.Verifier
 	if len(trustedURLs) > 0 {
-		verifier = freshguard.NewDirectURLVerifier(client, cfg.APIKey, trustedURLs, freshguard.Score)
+		judge := freshguard.NewJSONEntailmentJudge(client, extractorEndpoint, extractorModel, extractorKey)
+		verifier = freshguard.NewDirectURLVerifierWithJudge(client, cfg.APIKey, trustedURLs, freshguard.Score, judge)
 	} else {
 		verifier = freshguard.NewTavilyVerifierWithDomains(client, cfg.APIKey, stringSliceValue(raw, "trusted_domains"), freshguard.Score)
 	}

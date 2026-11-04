@@ -56,6 +56,8 @@ TAVILY_API_KEY=... go run ./cmd/live-benchmark \
   > benchmark/observations-direct.jsonl
 ```
 
+If `EXTRACTOR_API_KEY` is set, direct mode automatically uses the OpenAI-compatible semantic entailment judge instead of exact containment. Override its endpoint or model with `-entailment-endpoint` and `-entailment-model`. Keep deterministic and semantic runs in separate files.
+
 Then calculate the frozen metrics:
 
 ```sh
