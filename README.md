@@ -26,8 +26,9 @@ flowchart LR
     B --> L[LLM provider]
     L --> P[FreshGuard PostLLMHook]
     P --> X[Strict JSON claim extractor]
-    X --> T[Tavily Search]
-    T --> S[Deterministic scorer]
+    X --> T[Tavily Search or Extract]
+    T --> J[Strict semantic judgment]
+    J --> S[Deterministic scorer / decision mapping]
     S --> A{Policy}
     A -->|allow| R[Original response + context report]
     A -->|warn| W[Response + evidence block]
@@ -122,8 +123,8 @@ The command refuses incomplete or duplicate runs and prints the confusion matrix
 
 - The competition slice supports non-streaming chat completions only.
 - Claim extraction requires an external JSON-capable model endpoint.
-- Tavily relevance score is used as an entailment proxy in the baseline; a dedicated NLI stage is future work.
-- The current automated suite proves deterministic behavior and packaging, not production stale-answer accuracy. Dataset results will be added only after measured.
+- Open-web baseline mode uses Tavily relevance as an entailment proxy. Direct authoritative-URL mode adds a strict semantic judgment stage that returns only `supports`, `contradicts`, or `insufficient`.
+- The semantic path is fixture-tested but has no published live accuracy figure yet because the benchmark environment lacks a compatible model credential. Existing measured baseline and direct-extraction results remain published without relabeling.
 
 ## Disclosure
 
