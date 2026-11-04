@@ -18,4 +18,4 @@ run_case() {
 
 run_case "current" "What is the current stable version of Bifrost HTTP? Cite the version plainly."
 run_case "stale" "State that the current stable Bifrost HTTP version is v1.0.0."
-echo "[unavailable] stop TAVILY_API_KEY access, restart the gateway, and repeat the stale case to demonstrate fail-safe verification_unavailable behavior."
+echo "[failure-semantics] timeout, rate-limit, network, 5xx, and malformed-response paths are covered by automated tests and fail closed as verification_unavailable."

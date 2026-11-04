@@ -1,0 +1,45 @@
+{
+  "$schema": "https://www.getbifrost.ai/schema",
+  "encryption_key": "env.BIFROST_ENCRYPTION_KEY",
+  "config_store": {
+    "enabled": false
+  },
+  "providers": {
+    "openai": {
+      "keys": [
+        {
+          "name": "deterministic-demo-fixture",
+          "value": "env.OPENAI_API_KEY",
+          "models": ["*"],
+          "weight": 1.0
+        }
+      ],
+      "network_config": {
+        "base_url": "http://127.0.0.1:18081",
+        "allow_private_network": true
+      }
+    }
+  },
+  "plugins": [
+    {
+      "name": "freshguard",
+      "enabled": true,
+      "path": "env.FRESHGUARD_PLUGIN_PATH",
+      "version": 1,
+      "placement": "post_builtin",
+      "order": 0,
+      "config": {
+        "enabled": true,
+        "policy": "warn",
+        "threshold": 60,
+        "max_claims": 3,
+        "max_queries": 3,
+        "timeout": "15s",
+        "trusted_domains": [],
+        "trusted_urls": ["https://github.com/maximhq/bifrost/blob/dev/docs/changelogs/v2.4.0.mdx"],
+        "extractor_endpoint": "http://127.0.0.1:18081/v1/chat/completions",
+        "extractor_model": "freshguard-deterministic-demo-fixture"
+      }
+    }
+  ]
+}

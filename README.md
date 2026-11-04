@@ -1,5 +1,7 @@
 # FreshGuard for Bifrost
 
+[![CI](https://github.com/nlewisbyt-hash/freshguard-bifrost/actions/workflows/ci.yml/badge.svg)](https://github.com/nlewisbyt-hash/freshguard-bifrost/actions/workflows/ci.yml)
+
 FreshGuard is a native [Bifrost](https://github.com/maximhq/bifrost) post-response plugin that detects time-sensitive claims, checks them with Tavily evidence, and applies an `allow`, `warn`, or `block` freshness policy before an AI response reaches the caller.
 
 It targets the Global AI Hackathon problem statement **Open-Source Bifrost Gateway**, with an optional Tavily stale-answer-detector integration.
@@ -59,6 +61,16 @@ In another terminal:
 ```
 
 The demo makes a current-version request and an intentionally stale-version request. The latter should contain a `FreshGuard freshness check` section with status, score, and source URLs.
+
+### Credential-light local demo
+
+If Docker and a model-provider credential are unavailable, the repository includes a clearly labeled deterministic OpenAI-compatible fixture. Bifrost v2.3.2, the native FreshGuard plugin, and Tavily extraction remain live; only the provider answer and structured extraction/judgment responses are fixed demo inputs.
+
+```sh
+TAVILY_API_KEY=... ./scripts/local-demo.sh
+```
+
+This path requires Go 1.27.3, Node.js/npx, and a real Tavily key. It must be described as a deterministic local fixture in any recording; it is not an LLM accuracy demonstration.
 
 ## Build without Docker
 
