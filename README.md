@@ -82,6 +82,8 @@ TAVILY_API_KEY=... ./scripts/real-model-demo.sh
 
 This path uses a real local Qwen model for the provider answer, claim extraction, and semantic judgment; official Bifrost v2.3.2 hosts the native plugin and Tavily Extract supplies live authoritative evidence. `config.real-model.json` contains no secret and keeps the local endpoint bound to `127.0.0.1`.
 
+Watch the [60-second real-model demonstration](demo/FreshGuard-Real-Model-Demo.mp4), which shows the active gateway, verified and stale outcomes, and the measured 60-case benchmark.
+
 ## Build without Docker
 
 ```sh
