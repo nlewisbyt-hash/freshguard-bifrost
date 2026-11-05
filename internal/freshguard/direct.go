@@ -121,7 +121,7 @@ func (v *DirectURLVerifier) extract(ctx context.Context, claim Claim) ([]Evidenc
 			Supports: supports, Entailment: 1,
 		})
 	}
-	decision := EntailmentContradicts
+	decision := EntailmentInsufficient
 	if len(evidence) == 0 {
 		decision = EntailmentInsufficient
 	} else if v.judge != nil {

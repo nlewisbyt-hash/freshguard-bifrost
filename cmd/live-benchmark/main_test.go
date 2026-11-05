@@ -80,6 +80,29 @@ func TestRunCasesRoutesCategoriesAndWritesCompleteObservations(t *testing.T) {
 	}
 }
 
+type unverifiedVerifier struct{}
+
+func (unverifiedVerifier) Verify(_ context.Context, claims []freshguard.Claim) ([]freshguard.ClaimResult, error) {
+	return []freshguard.ClaimResult{{Claim: claims[0], Status: "unverified"}}, nil
+}
+
+func TestRunCasesDoesNotCountUnverifiedAsBlocked(t *testing.T) {
+	cases := []benchmarkpkg.Case{{ID: "current-01", Category: benchmarkpkg.CategoryCurrent, Prompt: "claim"}}
+	var output bytes.Buffer
+	if err := runCases(context.Background(), cases, func(benchmarkpkg.Case) freshguard.Verifier {
+		return unverifiedVerifier{}
+	}, &output); err != nil {
+		t.Fatal(err)
+	}
+	var observation benchmarkpkg.Observation
+	if err := json.NewDecoder(&output).Decode(&observation); err != nil {
+		t.Fatal(err)
+	}
+	if observation.ActualStatus != benchmarkpkg.StatusUnverified || observation.Blocked {
+		t.Fatalf("observation = %#v", observation)
+	}
+}
+
 func TestDomainsForCaseExtractsOnlyReferenceHostname(t *testing.T) {
 	tests := []struct {
 		name string

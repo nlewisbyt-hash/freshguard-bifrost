@@ -48,7 +48,7 @@ TAVILY_API_KEY=... go run ./cmd/live-benchmark \
   > benchmark/observations-sourced.jsonl
 ```
 
-For conservative direct-page verification, use `-direct-source` and a third output file. A claim is supported only when its normalized text explicitly appears in the extracted authoritative page content:
+For conservative direct-page verification, use `-direct-source` and a third output file. Without a semantic judge, exact normalized containment can verify a claim; non-exact evidence remains `unverified` rather than being mislabeled as a contradiction:
 
 ```sh
 TAVILY_API_KEY=... go run ./cmd/live-benchmark \
@@ -57,6 +57,23 @@ TAVILY_API_KEY=... go run ./cmd/live-benchmark \
 ```
 
 If `EXTRACTOR_API_KEY` is set, direct mode automatically uses the OpenAI-compatible semantic entailment judge instead of exact containment. Override its endpoint or model with `-entailment-endpoint` and `-entailment-model`. Keep deterministic and semantic runs in separate files.
+
+The submission semantic run uses a real local Qwen3 1.7B endpoint and live Tavily Extract:
+
+```sh
+EXTRACTOR_API_KEY=ollama TAVILY_API_KEY=... go run ./cmd/live-benchmark \
+  -cases benchmark/cases.jsonl -direct-source \
+  -entailment-endpoint http://127.0.0.1:11434/v1/chat/completions \
+  -entailment-model qwen3:1.7b \
+  > benchmark/observations-semantic.jsonl
+
+go run ./cmd/benchmark \
+  -cases benchmark/cases.jsonl \
+  -observations benchmark/observations-semantic.jsonl \
+  > benchmark/report-semantic.json
+```
+
+The 5 November 2026 run passed every accuracy and query gate: 85.0% stale recall, 95.2% current precision, 100.0% subjective bypass, 0.0% false blocks, 8,458.162 ms p95 latency, and 0.667 Tavily queries per case. The committed observation file contains all 60 cases.
 
 Then calculate the frozen metrics:
 

@@ -55,7 +55,7 @@ func TestDirectURLVerifierExtractsAndMatchesNormalizedClaim(t *testing.T) {
 	}
 }
 
-func TestDirectURLVerifierDoesNotSupportContradictoryQualifier(t *testing.T) {
+func TestDirectURLVerifierWithoutJudgeTreatsNonExactEvidenceAsUnverified(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"results":[{"url":"https://event.example/prizes","raw_content":"The Tavily track has 50,000 API credits distributed among the top three winning projects."}]}`))
 	}))
@@ -67,7 +67,7 @@ func TestDirectURLVerifierDoesNotSupportContradictoryQualifier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(results) != 1 || results[0].Status != "stale" || results[0].Evidence[0].Supports {
+	if len(results) != 1 || results[0].Status != "unverified" || results[0].Evidence[0].Supports {
 		t.Fatalf("results = %#v", results)
 	}
 }

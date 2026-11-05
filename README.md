@@ -17,7 +17,7 @@ AI gateways already control routing, cost, and reliability. FreshGuard adds a mi
 - A deterministic 0–100 score with visible components and citations.
 - `allow`: preserve the provider response and attach a report to Bifrost context.
 - `warn`: append a compact freshness report to the response.
-- `block`: return a structured non-fallback Bifrost error when a claim is below threshold.
+- `block`: return a structured non-fallback Bifrost error only for a confirmed `stale` claim below threshold; `unverified` evidence is reported but not blocked.
 - Fail-safe `verification_unavailable` behavior for timeout, rate limit, 5xx, network, or malformed Tavily responses.
 
 ## Architecture
@@ -71,6 +71,16 @@ TAVILY_API_KEY=... ./scripts/local-demo.sh
 ```
 
 This path requires Go 1.27.3, Node.js/npx, and a real Tavily key. It must be described as a deterministic local fixture in any recording; it is not an LLM accuracy demonstration.
+
+### Real local-model demo
+
+For a fully live provider and extraction path without a hosted-model credential, run Ollama locally with `qwen3:1.7b`, then launch:
+
+```sh
+TAVILY_API_KEY=... ./scripts/real-model-demo.sh
+```
+
+This path uses a real local Qwen model for the provider answer, claim extraction, and semantic judgment; official Bifrost v2.3.2 hosts the native plugin and Tavily Extract supplies live authoritative evidence. `config.real-model.json` contains no secret and keeps the local endpoint bound to `127.0.0.1`.
 
 ## Build without Docker
 
@@ -136,7 +146,7 @@ The command refuses incomplete or duplicate runs and prints the confusion matrix
 - The competition slice supports non-streaming chat completions only.
 - Claim extraction requires an external JSON-capable model endpoint.
 - Open-web baseline mode uses Tavily relevance as an entailment proxy. Direct authoritative-URL mode adds a strict semantic judgment stage that returns only `supports`, `contradicts`, or `insufficient`.
-- The semantic path is fixture-tested but has no published live accuracy figure yet because the benchmark environment lacks a compatible model credential. Existing measured baseline and direct-extraction results remain published without relabeling.
+- The semantic path is covered by fixture tests and can be exercised with the real local-model demo. Measured benchmark runs remain separately labeled by verifier and model so deterministic and semantic results are never conflated.
 
 ## Disclosure
 

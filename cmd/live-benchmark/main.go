@@ -97,7 +97,7 @@ func runCases(ctx context.Context, cases []benchmarkpkg.Case, verifierFor func(b
 				observation.ActualStatus = benchmarkpkg.StatusUnverified
 			} else {
 				observation.ActualStatus = normalizeStatus(results[0].Status)
-				observation.Blocked = observation.ActualStatus == benchmarkpkg.StatusStale || observation.ActualStatus == benchmarkpkg.StatusUnverified
+				observation.Blocked = observation.ActualStatus == benchmarkpkg.StatusStale
 			}
 		}
 

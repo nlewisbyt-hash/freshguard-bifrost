@@ -34,7 +34,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-go build -buildmode=plugin -trimpath -o "$demo_dir/freshguard.so" "$repo_dir/cmd/plugin"
+(cd "$repo_dir" && go build -buildmode=plugin -trimpath -o "$demo_dir/freshguard.so" ./cmd/plugin)
 sed "s#env.FRESHGUARD_PLUGIN_PATH#$demo_dir/freshguard.so#" "$repo_dir/config.demo.json" > "$demo_dir/config.json"
 
 (cd "$repo_dir" && DEMO_PROVIDER_ADDR=127.0.0.1:18081 go run ./cmd/demo-provider >"$fixture_log" 2>&1) &

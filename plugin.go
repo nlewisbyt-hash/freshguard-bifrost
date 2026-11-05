@@ -123,7 +123,7 @@ func buildReport(results []freshguard.ClaimResult, threshold int) freshguard.Ver
 		if result.Status == "unverified" {
 			report.Status = "unverified"
 		}
-		if result.Status == "stale" || result.Score < threshold {
+		if result.Status == "stale" || (result.Status == "verified" && result.Score < threshold) {
 			report.Status = "stale"
 			break
 		}
@@ -133,7 +133,7 @@ func buildReport(results []freshguard.ClaimResult, threshold int) freshguard.Ver
 
 func reportBelowThreshold(report freshguard.VerificationReport, threshold int) bool {
 	for _, result := range report.Results {
-		if result.Score < threshold {
+		if result.Status == "stale" && result.Score < threshold {
 			return true
 		}
 	}

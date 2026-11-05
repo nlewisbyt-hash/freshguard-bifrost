@@ -83,7 +83,22 @@ The experimental [`observations-direct.jsonl`](../benchmark/observations-direct.
 
 The page extraction itself succeeded and exposed FAQ content that search missed, but exact containment was too conservative for paraphrased true claims: only one of twenty current claims was verified. This mode is therefore committed as experimental evidence plumbing, not enabled by default. A dedicated entailment stage is required before direct extraction can reduce false blocks safely.
 
-The direct mode now includes that entailment stage in code: when `EXTRACTOR_API_KEY` is available, a strict JSON judge classifies bounded extracted evidence as `supports`, `contradicts`, or `insufficient`. Injection text remains untrusted data and only `supports` can raise evidence support. This path is covered by local HTTP tests but has no published live accuracy number yet because no compatible model credential was available for this run; the deterministic direct report above remains unchanged.
+The direct mode now includes that entailment stage in code: when `EXTRACTOR_API_KEY` is available, a strict JSON judge classifies bounded extracted evidence as `supports`, `contradicts`, or `insufficient`. Injection text remains untrusted data and only `supports` can raise evidence support. The deterministic direct report above remains unchanged so the exact-containment baseline stays auditable.
+
+### Real semantic direct-source run — 5 November 2026
+
+The separate [`observations-semantic.jsonl`](../benchmark/observations-semantic.jsonl) and [`report-semantic.json`](../benchmark/report-semantic.json) run used live Tavily Extract plus a real local Qwen3 1.7B entailment model. It evaluated all 60 frozen cases and did not reuse the deterministic provider fixture.
+
+| Metric | Measured result | Gate | Outcome |
+|---|---:|---:|---|
+| Stale recall | 85.0% | ≥80% | Pass |
+| Current precision | 95.2% | ≥85% | Pass |
+| Subjective bypass | 100.0% | ≥90% | Pass |
+| False block rate | 0.0% | ≤5% | Pass |
+| Added p95 latency | 8,458.162 ms | Report | Measured |
+| Average Tavily queries | 0.667 per case | ≤3.0 | Pass |
+
+The policy blocks only confirmed `stale` results. Evidence that the judge classifies as `insufficient` remains `unverified` and is not blocked. This change removes the prior false-block failure without treating missing support as proof of truth.
 
 The frozen cases now live in [`benchmark/cases.jsonl`](../benchmark/cases.jsonl). The distribution is validated by tests and cannot be evaluated with missing or duplicate observations. See [`benchmark/README.md`](../benchmark/README.md) for the observation schema.
 
@@ -96,7 +111,8 @@ The frozen cases now live in [`benchmark/cases.jsonl`](../benchmark/cases.jsonl)
 | Tavily timeout/network/429/5xx/malformed payload | `verification_unavailable` |
 | Existing provider error | Original error and response unchanged; no Tavily call |
 | Warn policy below threshold | Original answer plus evidence block |
-| Block policy below threshold | HTTP-oriented Bifrost error, fallbacks disabled |
+| Block policy, confirmed stale below threshold | HTTP-oriented Bifrost error, fallbacks disabled |
+| Block policy, evidence insufficient | `unverified`; response is not blocked |
 
 ## Reproducible commands
 
@@ -107,5 +123,7 @@ go build -buildmode=plugin -trimpath -o freshguard.so ./cmd/plugin
 TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl > benchmark/observations.jsonl
 TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl -source-grounded > benchmark/observations-sourced.jsonl
 TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl -direct-source > benchmark/observations-direct.jsonl
+EXTRACTOR_API_KEY=ollama TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl -direct-source -entailment-endpoint http://127.0.0.1:11434/v1/chat/completions -entailment-model qwen3:1.7b > benchmark/observations-semantic.jsonl
 go run ./cmd/benchmark -cases benchmark/cases.jsonl -observations benchmark/observations.jsonl
+go run ./cmd/benchmark -cases benchmark/cases.jsonl -observations benchmark/observations-semantic.jsonl
 ```

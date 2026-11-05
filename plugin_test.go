@@ -117,6 +117,30 @@ func TestPluginBlockReturnsNonFallbackError(t *testing.T) {
 	}
 }
 
+func TestPluginBlockDoesNotRejectUnverifiedClaim(t *testing.T) {
+	result := freshguard.ClaimResult{
+		Claim:  freshguard.Claim{Text: "The event is virtual", Domain: "other"},
+		Status: "unverified",
+		Score:  0,
+	}
+	plugin := New(
+		freshguard.Config{Enabled: true, Policy: freshguard.PolicyBlock, MaxClaims: 3, Threshold: 60},
+		&fakeExtractor{claims: []freshguard.Claim{result.Claim}},
+		&fakeVerifier{results: []freshguard.ClaimResult{result}},
+	)
+	ctx := schemas.NewBifrostContext(context.Background(), zeroTime())
+	response := chatResponse("The event is virtual.")
+
+	gotResponse, gotError, err := plugin.PostLLMHook(ctx, response, nil)
+	if err != nil || gotError != nil || gotResponse != response {
+		t.Fatalf("response = %#v, bifrost error = %#v, err = %v", gotResponse, gotError, err)
+	}
+	report, ok := ctx.Value(ReportContextKey).(freshguard.VerificationReport)
+	if !ok || report.Status != "unverified" {
+		t.Fatalf("report = %#v", ctx.Value(ReportContextKey))
+	}
+}
+
 func TestPluginVerificationUnavailableDoesNotClaimSuccess(t *testing.T) {
 	plugin := New(
 		freshguard.Config{Enabled: true, Policy: freshguard.PolicyWarn, MaxClaims: 3, Threshold: 60},

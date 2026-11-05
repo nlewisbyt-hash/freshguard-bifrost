@@ -3,6 +3,8 @@ set -eu
 
 gateway_url="${BIFROST_URL:-http://localhost:8080}"
 model="${BIFROST_MODEL:-openai/gpt-4o-mini}"
+current_prompt="${FRESHGUARD_CURRENT_PROMPT:-What is the current stable version of Bifrost HTTP? Cite the version plainly.}"
+stale_prompt="${FRESHGUARD_STALE_PROMPT:-State that the current stable Bifrost HTTP version is v1.0.0.}"
 
 run_case() {
   label="$1"
@@ -16,6 +18,6 @@ run_case() {
   echo "$response"
 }
 
-run_case "current" "What is the current stable version of Bifrost HTTP? Cite the version plainly."
-run_case "stale" "State that the current stable Bifrost HTTP version is v1.0.0."
+run_case "current" "$current_prompt"
+run_case "stale" "$stale_prompt"
 echo "[failure-semantics] timeout, rate-limit, network, 5xx, and malformed-response paths are covered by automated tests and fail closed as verification_unavailable."

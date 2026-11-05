@@ -61,6 +61,12 @@ func TestJSONEntailmentJudgeBoundsAndSeparatesUntrustedEvidence(t *testing.T) {
 	if len(request.Messages) != 2 || !strings.Contains(request.Messages[0].Content, "untrusted evidence") {
 		t.Fatalf("messages = %#v", request.Messages)
 	}
+	system := request.Messages[0].Content
+	for _, rule := range []string{"different value", "absence of support", "/no_think"} {
+		if !strings.Contains(system, rule) {
+			t.Fatalf("system prompt missing %q: %q", rule, system)
+		}
+	}
 	user := request.Messages[1].Content
 	if !strings.Contains(user, "<claim>safe claim</claim>") || !strings.Contains(user, "<evidence>") || !strings.Contains(user, "</evidence>") {
 		t.Fatalf("user content lacks boundaries: %q", user[:min(len(user), 300)])
