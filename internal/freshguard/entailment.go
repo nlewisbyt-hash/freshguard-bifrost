@@ -8,7 +8,9 @@ import (
 	"html"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
+	"unicode"
 )
 
 type EntailmentDecision string
@@ -56,6 +58,7 @@ func (j *JSONEntailmentJudge) Judge(ctx context.Context, claim, evidence string)
 		},
 		"response_format": map[string]string{"type": "json_object"},
 		"temperature":     0,
+		"max_tokens":      1024,
 	}
 	payload, err := json.Marshal(requestBody)
 	if err != nil {
@@ -109,6 +112,97 @@ func (j *JSONEntailmentJudge) Judge(ctx context.Context, claim, evidence string)
 	default:
 		return "", fmt.Errorf("unsupported entailment decision %q", result.Decision)
 	}
+}
+
+type rankedEvidenceSegment struct {
+	text  string
+	score int
+	index int
+}
+
+func compactEvidence(claim, evidence string, limit int) string {
+	if limit <= 0 {
+		return ""
+	}
+	if len([]rune(evidence)) <= limit {
+		return evidence
+	}
+	terms := comparableTerms(claim)
+	segments := splitEvidenceSegments(evidence, min(700, limit))
+	ranked := make([]rankedEvidenceSegment, 0, len(segments))
+	for index, segment := range segments {
+		normalized := normalizeComparableText(segment)
+		score := 0
+		for term := range terms {
+			if strings.Contains(normalized, term) {
+				score++
+			}
+		}
+		ranked = append(ranked, rankedEvidenceSegment{text: segment, score: score, index: index})
+	}
+	sort.SliceStable(ranked, func(i, k int) bool {
+		if ranked[i].score == ranked[k].score {
+			return ranked[i].index < ranked[k].index
+		}
+		return ranked[i].score > ranked[k].score
+	})
+
+	var result strings.Builder
+	remaining := limit
+	for _, segment := range ranked {
+		text := strings.TrimSpace(segment.text)
+		if text == "" || remaining == 0 {
+			continue
+		}
+		separator := ""
+		if result.Len() > 0 {
+			separator = "\n\n"
+		}
+		separatorRunes := len([]rune(separator))
+		if remaining <= separatorRunes {
+			break
+		}
+		remaining -= separatorRunes
+		text = truncateRunes(text, remaining)
+		result.WriteString(separator)
+		result.WriteString(text)
+		remaining -= len([]rune(text))
+	}
+	return result.String()
+}
+
+func comparableTerms(value string) map[string]struct{} {
+	terms := make(map[string]struct{})
+	for _, term := range strings.Fields(normalizeComparableText(value)) {
+		if len([]rune(term)) < 2 && !containsDigit(term) {
+			continue
+		}
+		terms[term] = struct{}{}
+	}
+	return terms
+}
+
+func containsDigit(value string) bool {
+	for _, char := range value {
+		if unicode.IsDigit(char) {
+			return true
+		}
+	}
+	return false
+}
+
+func splitEvidenceSegments(evidence string, chunkSize int) []string {
+	paragraphs := strings.FieldsFunc(evidence, func(char rune) bool { return char == '\n' || char == '\r' })
+	segments := make([]string, 0, len(paragraphs))
+	for _, paragraph := range paragraphs {
+		runes := []rune(strings.TrimSpace(paragraph))
+		for len(runes) > 0 {
+			end := min(chunkSize, len(runes))
+			segments = append(segments, string(runes[:end]))
+			runes = runes[end:]
+		}
+	}
+	return segments
 }
 
 func truncateRunes(value string, limit int) string {

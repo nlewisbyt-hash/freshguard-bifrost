@@ -15,11 +15,49 @@ type fakeEntailmentJudge struct {
 	err      error
 	claim    string
 	evidence string
+	calls    int
 }
 
 func (j *fakeEntailmentJudge) Judge(_ context.Context, claim, evidence string) (EntailmentDecision, error) {
+	j.calls++
 	j.claim, j.evidence = claim, evidence
 	return j.decision, j.err
+}
+
+func TestDirectURLVerifierExactSupportBypassesEntailmentJudge(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"results":[{"url":"https://docs.example/page","raw_content":"Official notice: The API costs $2 per million tokens."}]}`))
+	}))
+	defer server.Close()
+	judge := &fakeEntailmentJudge{decision: EntailmentContradicts}
+	verifier := NewDirectURLVerifierWithJudge(server.Client(), "key", []string{"https://docs.example/page"}, Score, judge)
+	verifier.endpoint = server.URL
+
+	results, err := verifier.Verify(context.Background(), []Claim{{Text: "The API costs $2 per million tokens."}})
+	if err != nil || len(results) != 1 || results[0].Status != "verified" {
+		t.Fatalf("results = %#v, err = %v", results, err)
+	}
+	if judge.calls != 0 {
+		t.Fatalf("judge calls = %d, want 0", judge.calls)
+	}
+}
+
+func TestDirectURLVerifierPartialSupportStillUsesEntailmentJudge(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"results":[{"url":"https://docs.example/page","raw_content":"The submission deadline is November 15."}]}`))
+	}))
+	defer server.Close()
+	judge := &fakeEntailmentJudge{decision: EntailmentInsufficient}
+	verifier := NewDirectURLVerifierWithJudge(server.Client(), "key", []string{"https://docs.example/page"}, Score, judge)
+	verifier.endpoint = server.URL
+
+	results, err := verifier.Verify(context.Background(), []Claim{{Text: "The submission deadline is November 15, 2026."}})
+	if err != nil || len(results) != 1 || results[0].Status != "unverified" {
+		t.Fatalf("results = %#v, err = %v", results, err)
+	}
+	if judge.calls != 1 {
+		t.Fatalf("judge calls = %d, want 1", judge.calls)
+	}
 }
 
 func TestDirectURLVerifierExtractsAndMatchesNormalizedClaim(t *testing.T) {

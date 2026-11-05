@@ -1,0 +1,25 @@
+{
+  "case_count": 60,
+  "confusion": {
+    "no_time_sensitive_claims": {
+      "no_time_sensitive_claims": 10
+    },
+    "stale": {
+      "stale": 16,
+      "unverified": 1,
+      "verified": 3
+    },
+    "verification_unavailable": {
+      "verification_unavailable": 10
+    },
+    "verified": {
+      "verified": 20
+    }
+  },
+  "stale_recall": 0.8,
+  "current_precision": 0.8695652173913043,
+  "subjective_bypass": 1,
+  "false_block_rate": 0,
+  "p95_latency_ms": 7972.356,
+  "average_tavily_queries": 0.6666666666666666
+}

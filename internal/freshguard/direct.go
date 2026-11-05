@@ -109,7 +109,7 @@ func (v *DirectURLVerifier) extract(ctx context.Context, claim Claim) ([]Evidenc
 		if content == "" {
 			continue
 		}
-		supports := claimText != "" && strings.Contains(normalizeComparableText(content), claimText)
+		supports := deterministicallySupportsClaim(claimText, normalizeComparableText(content))
 		deterministicSupport = deterministicSupport || supports
 		allContent = append(allContent, content)
 		snippet := content
@@ -124,18 +124,73 @@ func (v *DirectURLVerifier) extract(ctx context.Context, claim Claim) ([]Evidenc
 	decision := EntailmentInsufficient
 	if len(evidence) == 0 {
 		decision = EntailmentInsufficient
+	} else if deterministicSupport {
+		decision = EntailmentSupports
 	} else if v.judge != nil {
 		decision, err = v.judge.Judge(ctx, claim.Text, strings.Join(allContent, "\n\n"))
 		if err != nil {
 			return nil, "", fmt.Errorf("%w: entailment judge failed: %v", ErrVerificationUnavailable, err)
 		}
-	} else if deterministicSupport {
-		decision = EntailmentSupports
 	}
 	for index := range evidence {
 		evidence[index].Supports = decision == EntailmentSupports
 	}
 	return evidence, decision, nil
+}
+
+func deterministicallySupportsClaim(normalizedClaim, normalizedEvidence string) bool {
+	if normalizedClaim == "" {
+		return false
+	}
+	searchFrom := 0
+	for searchFrom <= len(normalizedEvidence) {
+		relative := strings.Index(normalizedEvidence[searchFrom:], normalizedClaim)
+		if relative < 0 {
+			return false
+		}
+		start := searchFrom + relative
+		end := start + len(normalizedClaim)
+		before := trailingWords(normalizedEvidence[:start], 6)
+		after := leadingWords(normalizedEvidence[end:], 4)
+		if !containsNegationCue(before, after) {
+			return true
+		}
+		searchFrom = end
+	}
+	return false
+}
+
+func trailingWords(value string, limit int) string {
+	words := strings.Fields(value)
+	if len(words) > limit {
+		words = words[len(words)-limit:]
+	}
+	return strings.Join(words, " ")
+}
+
+func leadingWords(value string, limit int) string {
+	words := strings.Fields(value)
+	if len(words) > limit {
+		words = words[:limit]
+	}
+	return strings.Join(words, " ")
+}
+
+func containsNegationCue(before, after string) bool {
+	for _, cue := range []string{
+		"false that", "not true that", "incorrect that", "inaccurate that", "outdated that",
+		"denies that", "denied that", "no longer true that",
+	} {
+		if strings.Contains(before, cue) {
+			return true
+		}
+	}
+	for _, cue := range []string{"is false", "is incorrect", "is inaccurate", "is outdated", "is no longer true"} {
+		if strings.HasPrefix(after, cue) {
+			return true
+		}
+	}
+	return false
 }
 
 func normalizeTrustedURLs(values []string) []string {

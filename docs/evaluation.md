@@ -15,8 +15,13 @@
 | Concurrent request isolation | `go test -race ./...` | Passing |
 | Native `.so` build and required exports | Packaging integration test | Passing |
 | Official Bifrost HTTP v2.3.2 host load | Local process smoke test; plugin status `freshguard - active`, `/health` status `ok` | Passing |
+| Buffered Chat Completions streaming | Every Unicode rune split, warn/block, provider-error cleanup, concurrent contexts, and fuzz seeds | Passing |
+| Responses API and multimodal surfaces | Non-stream Responses text, Chat audio transcripts, mixed text/tool preservation, tool-only classification, and explicit unsupported-stream rejection | Passing |
+| Adversarial entailment inputs | Negated exact claims, qualifiers, prompt injection, long Unicode evidence, strict/trailing JSON, and fuzz seeds | Passing |
 
 These checks prove deterministic behavior and loadable packaging. They do not by themselves prove real-world accuracy or latency.
+
+The hardening suite intentionally extends beyond the frozen 60 cases. It covers malformed model output, negation wrappers around exact claims, qualifier reversals, prompt-injection passages, Unicode/rune boundaries, empty and final-only stream chunks, every split point in a representative streamed sentence, concurrent contexts, and seeded fuzz properties. This materially reduces known boundary risk, but no finite corpus or fuzz duration can prove that unknown edge cases do not exist; unrecognized evidence remains `unverified` rather than being promoted to verified.
 
 ## Submission benchmark
 
@@ -100,6 +105,21 @@ The separate [`observations-semantic.jsonl`](../benchmark/observations-semantic.
 
 The policy blocks only confirmed `stale` results. Evidence that the judge classifies as `insufficient` remains `unverified` and is not blocked. This change removes the prior false-block failure without treating missing support as proof of truth.
 
+### Hardened semantic rerun — 6 November 2026
+
+The committed [`observations-qwen3-hardened.jsonl`](../benchmark/observations-qwen3-hardened.jsonl) and [`report-qwen3-hardened.json`](../benchmark/report-qwen3-hardened.json) rerun uses the same frozen 60 cases, live Tavily Extract, and local Qwen3 1.7B. It adds deterministic exact-support bypass, bounds the entailment output, and preserves authoritative page order rather than asking the small model to judge reordered excerpts.
+
+| Metric | Measured result | Gate | Outcome |
+|---|---:|---:|---|
+| Stale recall | 80.0% | ≥80% | Pass |
+| Current precision | 87.0% | ≥85% | Pass |
+| Subjective bypass | 100.0% | ≥90% | Pass |
+| False block rate | 0.0% | ≤5% | Pass |
+| Added p95 latency | 7,972.356 ms | Report | Measured |
+| Average Tavily queries | 0.667 per case | ≤3.0 | Pass |
+
+Compared with the 5 November run, p95 falls by 485.806 ms (5.7%). The rerun remains above all frozen accuracy gates, but the metric movement also demonstrates local-model variance; it is not presented as a universal latency or accuracy guarantee.
+
 The frozen cases now live in [`benchmark/cases.jsonl`](../benchmark/cases.jsonl). The distribution is validated by tests and cannot be evaluated with missing or duplicate observations. See [`benchmark/README.md`](../benchmark/README.md) for the observation schema.
 
 ## Failure-mode expectations
@@ -113,6 +133,12 @@ The frozen cases now live in [`benchmark/cases.jsonl`](../benchmark/cases.jsonl)
 | Warn policy below threshold | Original answer plus evidence block |
 | Block policy, confirmed stale below threshold | HTTP-oriented Bifrost error, fallbacks disabled |
 | Block policy, evidence insufficient | `unverified`; response is not blocked |
+| Chat stream, non-final chunk | Buffered and suppressed; no assistant text reaches the client before verification |
+| Chat stream, final chunk | Complete buffered text is verified once, then emitted as one terminal chunk or blocked |
+| Responses or Chat audio/tool stream that cannot be replayed losslessly | Explicit `unsupported_protected_stream` error; no assistant content released |
+| Non-streaming Responses output text | Ordered visible text is verified; tool items are preserved |
+| Non-streaming Chat audio | Transcript is verified when ordinary text is absent; raw audio is never transcribed or altered |
+| Tool-only response | `no_time_sensitive_claims`; tool arguments remain untouched |
 
 ## Reproducible commands
 
@@ -126,4 +152,5 @@ TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl -dir
 EXTRACTOR_API_KEY=ollama TAVILY_API_KEY=... go run ./cmd/live-benchmark -cases benchmark/cases.jsonl -direct-source -entailment-endpoint http://127.0.0.1:11434/v1/chat/completions -entailment-model qwen3:1.7b > benchmark/observations-semantic.jsonl
 go run ./cmd/benchmark -cases benchmark/cases.jsonl -observations benchmark/observations.jsonl
 go run ./cmd/benchmark -cases benchmark/cases.jsonl -observations benchmark/observations-semantic.jsonl
+go run ./cmd/benchmark -cases benchmark/cases.jsonl -observations benchmark/observations-qwen3-hardened.jsonl
 ```

@@ -12,7 +12,7 @@ AI gateways already control routing, cost, and reliability. FreshGuard adds a mi
 
 ## What judges can see
 
-- Atomic time-sensitive claims extracted from a non-streaming chat response.
+- Atomic time-sensitive claims extracted from buffered chat-completion responses, including streams.
 - At most three Tavily searches per response.
 - A deterministic 0–100 score with visible components and citations.
 - `allow`: preserve the provider response and attach a report to Bifrost context.
@@ -145,7 +145,7 @@ The command refuses incomplete or duplicate runs and prints the confusion matrix
 
 ## Limitations
 
-- The competition slice supports non-streaming chat completions only.
+- Chat Completions text streams are buffered until the final chunk, verified once, and then released or blocked. Non-streaming Responses output text and Chat audio transcripts use the same verifier; mixed text/tool responses preserve tool calls. Stream families that cannot be replayed losslessly are explicitly rejected instead of silently bypassing protection.
 - Claim extraction requires an external JSON-capable model endpoint.
 - Open-web baseline mode uses Tavily relevance as an entailment proxy. Direct authoritative-URL mode adds a strict semantic judgment stage that returns only `supports`, `contradicts`, or `insufficient`.
 - The semantic path is covered by fixture tests and can be exercised with the real local-model demo. Measured benchmark runs remain separately labeled by verifier and model so deterministic and semantic results are never conflated.
